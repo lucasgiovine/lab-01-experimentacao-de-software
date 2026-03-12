@@ -85,52 +85,77 @@ def generate_analysis_csv(results, language_freq):
             writer.writerow([lang, count])
 
 
-def plot_all_metrics(results):
+# -----------------------------
+# HISTOGRAMA PARA RQs
+# -----------------------------
+def plot_rq_distribution(data, median_value, title, xlabel, filename):
 
-    fig, axs = plt.subplots(2, 3, figsize=(12, 8))
+    plt.figure(figsize=(8,5))
 
-    metrics = [
-        ("Repository Age (days)", results["median_age_days"]),
-        ("Merged PRs", results["median_merged_prs"]),
-        ("Releases", results["median_releases"]),
-        ("Last Update (days)", results["median_last_update_days"]),
-        ("Closed Issue Ratio", results["median_issue_ratio"]),
-    ]
+    plt.hist(data, bins=30)
 
-    axs = axs.flatten()
+    plt.axvline(
+    x=median_value,
+    color="#FF0000",
+    linestyle="--",
+    linewidth=3,
+    zorder=10,
+    label=f"Median: {median_value:.2f}"
+)
 
-    for i, (label, value) in enumerate(metrics):
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel("Number of repositories")
 
-        axs[i].bar(["median"], [value])
-        axs[i].set_title(label)
-
-        axs[i].text(0, value, f"{value:.2f}", ha="center", va="bottom")
-
-    # remove subplot vazio
-    fig.delaxes(axs[5])
+    plt.legend()
 
     plt.tight_layout()
 
-    plt.savefig("repository_metrics.png")
+    plt.savefig(filename)
+
+    plt.close()
+
+    plt.figure(figsize=(8,5))
+
+    plt.hist(data, bins=30)
+
+    plt.axvline(
+        median_value,
+        linestyle="dashed",
+        label=f"Median: {median_value:.2f}"
+    )
+
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel("Number of repositories")
+
+    plt.legend()
+
+    plt.tight_layout()
+
+    plt.savefig(filename)
 
     plt.close()
 
 
+# -----------------------------
+# TOP LINGUAGENS
+# -----------------------------
 def plot_top_languages(language_freq):
 
-    top = language_freq.most_common(100)
+    top = language_freq.most_common(10)
 
     languages = [x[0] for x in top]
     counts = [x[1] for x in top]
 
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(10,6))
 
     plt.bar(languages, counts)
 
-    plt.title("Top 100 Programming Languages")
-    plt.ylabel("Number of Repositories")
+    plt.title("Top 10 Programming Languages")
+    plt.ylabel("Number of repositories")
 
-    plt.xticks(rotation=90)
+    plt.xticks(rotation=45)
 
     plt.tight_layout()
 
@@ -138,8 +163,9 @@ def plot_top_languages(language_freq):
 
     plt.close()
 
+
 # -----------------------------
-# MAIN
+# MAIN (ANÁLISE)
 # -----------------------------
 if __name__ == "__main__":
 
@@ -147,7 +173,56 @@ if __name__ == "__main__":
 
     results, language_freq = compute_metrics(data)
 
+    plt.style.use("default")
+
     generate_analysis_csv(results, language_freq)
 
-    plot_all_metrics(results)
+    # RQ1 — idade dos repositórios
+    plot_rq_distribution(
+        data["age_days"],
+        results["median_age_days"],
+        "RQ1 – Repository Age Distribution",
+        "Repository age (days)",
+        "rq1_repo_age.png"
+    )
+
+    # RQ2 — contribuição externa
+    plot_rq_distribution(
+        data["merged_prs"],
+        results["median_merged_prs"],
+        "RQ2 – Merged PRs Distribution",
+        "Merged pull requests",
+        "rq2_merged_prs.png"
+    )
+
+    # RQ3 — releases
+    plot_rq_distribution(
+        data["releases"],
+        results["median_releases"],
+        "RQ3 – Releases Distribution",
+        "Number of releases",
+        "rq3_releases.png"
+    )
+
+    # RQ4 — frequência de atualização
+    plot_rq_distribution(
+        data["last_update_days"],
+        results["median_last_update_days"],
+        "RQ4 – Last Update Distribution",
+        "Days since last update",
+        "rq4_last_update.png"
+    )
+
+    # RQ6 — proporção de issues fechadas
+    plot_rq_distribution(
+        data["issue_ratio"],
+        results["median_issue_ratio"],
+        "RQ6 – Closed Issue Ratio Distribution",
+        "Closed issue ratio",
+        "rq6_issue_ratio.png"
+    )
+
+    # linguagens
     plot_top_languages(language_freq)
+
+    print("Análise e gráficos gerados com sucesso!")
