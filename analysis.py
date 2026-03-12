@@ -1,6 +1,7 @@
 import csv
 from statistics import median
 from collections import Counter
+import matplotlib.pyplot as plt
 
 
 # -----------------------------
@@ -84,6 +85,59 @@ def generate_analysis_csv(results, language_freq):
             writer.writerow([lang, count])
 
 
+def plot_all_metrics(results):
+
+    fig, axs = plt.subplots(2, 3, figsize=(12, 8))
+
+    metrics = [
+        ("Repository Age (days)", results["median_age_days"]),
+        ("Merged PRs", results["median_merged_prs"]),
+        ("Releases", results["median_releases"]),
+        ("Last Update (days)", results["median_last_update_days"]),
+        ("Closed Issue Ratio", results["median_issue_ratio"]),
+    ]
+
+    axs = axs.flatten()
+
+    for i, (label, value) in enumerate(metrics):
+
+        axs[i].bar(["median"], [value])
+        axs[i].set_title(label)
+
+        axs[i].text(0, value, f"{value:.2f}", ha="center", va="bottom")
+
+    # remove subplot vazio
+    fig.delaxes(axs[5])
+
+    plt.tight_layout()
+
+    plt.savefig("repository_metrics.png")
+
+    plt.close()
+
+
+def plot_top_languages(language_freq):
+
+    top = language_freq.most_common(100)
+
+    languages = [x[0] for x in top]
+    counts = [x[1] for x in top]
+
+    plt.figure(figsize=(12, 6))
+
+    plt.bar(languages, counts)
+
+    plt.title("Top 100 Programming Languages")
+    plt.ylabel("Number of Repositories")
+
+    plt.xticks(rotation=90)
+
+    plt.tight_layout()
+
+    plt.savefig("top_languages.png")
+
+    plt.close()
+
 # -----------------------------
 # MAIN
 # -----------------------------
@@ -95,4 +149,5 @@ if __name__ == "__main__":
 
     generate_analysis_csv(results, language_freq)
 
-    print("Arquivo analysis_results.csv gerado com sucesso!")
+    plot_all_metrics(results)
+    plot_top_languages(language_freq)
